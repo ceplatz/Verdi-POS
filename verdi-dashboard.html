@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Verdi Boadilla — Live Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <style>
+    :root {
+      --green: #2A5C3F;
+      --green-light: #3A7A55;
+      --off-white: #F5F7F5;
+      --gray: #7A8A7A;
+      --gray-light: #E8EDE8;
+      --text: #1A2E1A;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--off-white);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      background: var(--green);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.15);
+      padding: 5px 12px; border-radius: 20px;
+      font-size: 12px; color: #fff; font-weight: 500;
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #4CAF50;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+    }
+    .last-updated {
+      font-size: 11px; color: rgba(255,255,255,0.6);
+      text-align: center; padding: 6px;
+      background: var(--green);
+    }
+    .container { padding: 20px 16px; max-width: 600px; margin: 0 auto; }
+    .date-banner {
+      text-align: center;
+      font-size: 13px; color: var(--gray);
+      margin-bottom: 16px;
+      text-transform: capitalize;
+    }
+
+    /* Summary cards */
+    .summary-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-bottom: 20px;
+    }
+    .summary-card {
+      background: #fff; border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .summary-card.full { grid-column: span 2; }
+    .s-label {
+      font-size: 10px; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--gray); margin-bottom: 6px;
+    }
+    .s-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px; font-weight: 900;
+    }
+    .s-value.green { color: var(--green); }
+    .s-value.card { color: #3A7AC8; }
+    .s-value.cash { color: #C87A3A; }
+    .s-value.vat { color: #8B5E3C; }
+
+    /* Section titles */
+    .section-title {
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--gray);
+      margin: 20px 0 10px; font-weight: 500;
+    }
+
+    /* Transactions */
+    .tx-list { background: #fff; border-radius: 16px; overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+    .tx-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 16px; border-bottom: 1px solid var(--gray-light);
+    }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-item.voided { opacity: 0.45; }
+    .tx-badge {
+      padding: 3px 8px; border-radius: 20px; font-size: 10px;
+      font-weight: 600; flex-shrink: 0; margin-top: 2px;
+    }
+    .tx-badge.card { background: #E8F0FB; color: #3A7AC8; }
+    .tx-badge.cash { background: #FBF2E8; color: #C87A3A; }
+    .tx-badge.voided { background: #fde8e8; color: #e05a3a; }
+    .tx-info { flex: 1; }
+    .tx-meta { font-size: 11px; color: var(--gray); margin-bottom: 2px; }
+    .tx-items { font-size: 12px; color: var(--text); }
+    .tx-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px; font-weight: 700; flex-shrink: 0;
+    }
+    .tx-amount.voided { text-decoration: line-through; color: var(--gray); }
+
+    .empty-state {
+      text-align: center; padding: 40px 20px;
+      color: var(--gray); font-size: 14px;
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+    /* Hourly mini chart */
+    .chart-wrap { background: #fff; border-radius: 16px; padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+    .chart-bars {
+      display: flex; align-items: flex-end;
+      gap: 4px; height: 80px; margin-bottom: 4px;
+    }
+    .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .chart-bar {
+      width: 100%; background: var(--green);
+      border-radius: 4px 4px 0 0; min-height: 2px;
+      transition: height 0.4s;
+    }
+    .chart-bar.empty { background: var(--gray-light); }
+    .chart-label { font-size: 9px; color: var(--gray); }
+
+    .no-data {
+      text-align: center; padding: 20px;
+      color: var(--gray); font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">Verdi Boadilla</div>
+  <div class="live-badge"><div class="live-dot"></div> Live</div>
+</header>
+<div class="last-updated" id="lastUpdated">Connecting...</div>
+
+<div class="container">
+  <div class="date-banner" id="dateBanner">—</div>
+
+  <div class="summary-grid">
+    <div class="summary-card full">
+      <div class="s-label">Total Revenue (incl. VAT)</div>
+      <div class="s-value green" id="sTotal">€0.00</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-label">VAT (10%)</div>
+      <div class="s-value vat" id="sVat">€0.00</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-label">Transactions</div>
+      <div class="s-value" id="sTx">0</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-label">Card</div>
+      <div class="s-value card" id="sCard">€0.00</div>
+    </div>
+    <div class="summary-card">
+      <div class="s-label">Cash</div>
+      <div class="s-value cash" id="sCash">€0.00</div>
+    </div>
+  </div>
+
+  <div class="section-title">Sales by Hour</div>
+  <div class="chart-wrap">
+    <div class="chart-bars" id="hourChart"></div>
+  </div>
+
+  <div class="section-title">Today's Transactions</div>
+  <div class="tx-list" id="txList">
+    <div class="empty-state">
+      <div class="empty-icon">🍦</div>
+      Waiting for sales data...
+    </div>
+  </div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD1eZY0iSRR9FMLR6VidYe4TvJV7kRMswA",
+    authDomain: "verdi-boadilla---pos.firebaseapp.com",
+    databaseURL: "https://verdi-boadilla---pos-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "verdi-boadilla---pos",
+    storageBucket: "verdi-boadilla---pos.firebasestorage.app",
+    messagingSenderId: "421348834098",
+    appId: "1:421348834098:web:74b5b979b36ac8cadb752b"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  function todayKey() {
+    return new Date().toISOString().slice(0,10).replace(/-/g,'_');
+  }
+
+  function fmt(iso) {
+    return new Date(iso).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
+  }
+
+  function fmtEur(n) {
+    return '€' + (n||0).toFixed(2);
+  }
+
+  // Listen to today's summary in real time
+  function listenToday() {
+    const key = todayKey();
+    db.ref('pos/sessions/' + key + '/summary').on('value', snap => {
+      const s = snap.val();
+      if (!s) {
+        document.getElementById('lastUpdated').textContent = 'No sales yet today';
+        return;
+      }
+      document.getElementById('sTotal').textContent = fmtEur(s.totalRev);
+      document.getElementById('sVat').textContent   = fmtEur(s.vatAmt || s.totalRev * 0.10);
+      document.getElementById('sCard').textContent  = fmtEur(s.cardRev);
+      document.getElementById('sCash').textContent  = fmtEur(s.cashRev);
+      document.getElementById('sTx').textContent    = s.txCount || 0;
+      document.getElementById('dateBanner').textContent =
+        new Date().toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+      document.getElementById('lastUpdated').textContent =
+        'Last updated: ' + fmt(s.lastUpdated);
+    });
+
+    // Listen to sales list in real time
+    db.ref('pos/sessions/' + key + '/sales').on('value', snap => {
+      const data = snap.val();
+      const txList = document.getElementById('txList');
+      const hourChart = document.getElementById('hourChart');
+
+      if (!data) {
+        txList.innerHTML = '<div class="empty-state"><div class="empty-icon">🍦</div>No sales yet today</div>';
+        hourChart.innerHTML = '<div class="no-data">No data yet</div>';
+        return;
+      }
+
+      // Build sales array sorted by time descending
+      const sales = Object.values(data).sort((a,b) => new Date(b.time) - new Date(a.time));
+
+      // Render transactions
+      txList.innerHTML = sales.map(tx => {
+        const badge = tx.voided ? 'voided' : tx.method;
+        const label = tx.voided ? '🚫 Voided' : (tx.method === 'card' ? '💳 Card' : '💵 Cash');
+        return `
+          <div class="tx-item ${tx.voided ? 'voided' : ''}">
+            <span class="tx-badge ${badge}">${label}</span>
+            <div class="tx-info">
+              <div class="tx-meta">${fmt(tx.time)} · ${tx.employee}</div>
+              <div class="tx-items">${(tx.items||[]).join(', ')}</div>
+              ${tx.voided ? '<div style="font-size:11px;color:#e05a3a;margin-top:2px;">Voided by ' + tx.voidedBy + '</div>' : ''}
+            </div>
+            <div class="tx-amount ${tx.voided ? 'voided' : ''}">€${(tx.total||0).toFixed(2)}</div>
+          </div>
+        `;
+      }).join('');
+
+      // Build hourly chart
+      const buckets = Array(24).fill(0);
+      sales.filter(t => !t.voided).forEach(tx => {
+        buckets[new Date(tx.time).getHours()] += tx.total || 0;
+      });
+      const active = buckets.map((v,h) => ({h,v})).filter(x => x.v > 0);
+      if (active.length === 0) {
+        hourChart.innerHTML = '<div class="no-data">No data yet</div>';
+        return;
+      }
+      const minH = Math.max(0, Math.min(...active.map(x=>x.h)) - 1);
+      const maxH = Math.min(23, Math.max(...active.map(x=>x.h)) + 1);
+      const maxV = Math.max(...buckets);
+      let chartHtml = '';
+      for (let h = minH; h <= maxH; h++) {
+        const pct = maxV > 0 ? (buckets[h] / maxV * 100) : 0;
+        chartHtml += `
+          <div class="chart-bar-wrap">
+            <div class="chart-bar ${buckets[h]===0?'empty':''}" style="height:${Math.max(pct,2)}%"></div>
+            <div class="chart-label">${h}h</div>
+          </div>
+        `;
+      }
+      hourChart.innerHTML = chartHtml;
+    });
+  }
+
+  listenToday();
+</script>
+</body>
+</html>
