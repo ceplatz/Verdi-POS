@@ -1806,12 +1806,14 @@
     var timeStr = now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
     var lines = [];
     lines.push('');
-    lines.push(ctr('VERDI BOADILLA'));
+    lines.push(ctr('VERDI BOADILLA SL'));
     lines.push(ctr('Heladeria Artesanal'));
-    lines.push(ctr('Boadilla del Monte'));
+    lines.push(ctr('Avenida Siglo XXI, 4'));
+    lines.push(ctr('28660 Boadilla del Monte'));
+    lines.push(ctr('CIF B21903307'));
+    lines.push(ctr('Tefn: 650 54 02 81'));
     lines.push('');
     lines.push(ctr(dateStr + '  ' + timeStr));
-    lines.push(ctr(sale.employee));
     lines.push('');
     lines.push(dsh());
     if (sale.itemObjects && sale.itemObjects.length > 0) {
@@ -1828,13 +1830,15 @@
     var vat = Math.round(sale.total * 0.10 * 100) / 100;
     var base = Math.round((sale.total - vat) * 100) / 100;
     lines.push(dsh());
-    lines.push(rw('Base imponible (90%)', EUR + base.toFixed(2)));
+    lines.push(rw('Base imponible)', EUR + base.toFixed(2)));
     lines.push(rw('IVA 10%', EUR + vat.toFixed(2)));
     lines.push(dsh());
     lines.push(rw('** TOTAL **', EUR + sale.total.toFixed(2)));
     lines.push(rw('Forma de pago:', sale.method==='card'?'Tarjeta':'Efectivo'));
     lines.push(dsh());
     lines.push('');
+    lines.push(ctr('Es Mas Que Helado, Es Verdi..!'));
+     lines.push('');
     lines.push(ctr('Gracias por su visita!'));
     lines.push(ctr('Vuelva pronto :)'));
     lines.push('');
