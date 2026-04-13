@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verdi — Briefing del Día</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --green:#006E51;--green-d:#004d3a;--green-l:#e0f2ed;
+  --text:#1a2e25;--gray:#6b7f78;--gray-light:#e8edeb;
+  --amber:#f59e0b;--amber-l:#fffbeb;--red:#e05a3a;--red-l:#fef2f0;
+  --blue:#3b82f6;--blue-l:#eff6ff;
+  --radius:14px;
+}
+body{font-family:'DM Sans',sans-serif;background:#f5f9f7;color:var(--text);min-height:100vh;}
+
+/* HEADER */
+.brief-header{background:linear-gradient(135deg,#004d3a 0%,#006E51 100%);padding:28px 28px 24px;color:#fff;position:relative;overflow:hidden;}
+.brief-header::after{content:'';position:absolute;right:-40px;top:-40px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,0.04);}
+.brief-date{font-family:'Montserrat',sans-serif;font-size:28px;font-weight:800;margin-bottom:4px;}
+.brief-sub{font-size:14px;opacity:0.7;display:flex;align-items:center;gap:16px;}
+.brief-clock{font-size:14px;opacity:0.9;font-weight:600;font-variant-numeric:tabular-nums;}
+.brief-nav{display:flex;gap:10px;margin-top:18px;}
+.brief-nav-btn{padding:6px 16px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.3);background:transparent;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
+.brief-nav-btn:hover{background:rgba(255,255,255,0.12);}
+
+/* PAGE */
+.page{max-width:900px;margin:0 auto;padding:24px 20px 60px;}
+
+/* GRID */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.grid-1{margin-bottom:16px;}
+
+/* CARDS */
+.card{background:#fff;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden;}
+.card-icon{font-size:22px;margin-bottom:10px;}
+.card-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--gray);margin-bottom:6px;}
+.card-main{font-size:28px;font-weight:800;font-family:'Montserrat',sans-serif;line-height:1.1;margin-bottom:4px;}
+.card-sub{font-size:13px;color:var(--gray);}
+.card.accent-green{border-color:var(--green);background:linear-gradient(135deg,#f0faf7 0%,#fff 60%);}
+.card.accent-amber{border-color:var(--amber);background:linear-gradient(135deg,#fffbeb 0%,#fff 60%);}
+.card.accent-red{border-color:var(--red);background:linear-gradient(135deg,#fef2f0 0%,#fff 60%);}
+.card.accent-blue{border-color:var(--blue);background:linear-gradient(135deg,#eff6ff 0%,#fff 60%);}
+
+/* WEATHER */
+.weather-main{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
+.weather-emoji{font-size:48px;line-height:1;}
+.weather-temp{font-family:'Montserrat',sans-serif;font-size:36px;font-weight:800;}
+.weather-desc{font-size:13px;color:var(--gray);margin-top:2px;}
+.weather-pills{display:flex;gap:8px;flex-wrap:wrap;}
+.weather-pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;background:#f0f4f2;color:var(--gray);}
+
+/* PREDICTION */
+.pred-bar-wrap{background:#f0f4f2;border-radius:6px;height:10px;margin:10px 0 6px;overflow:hidden;}
+.pred-bar{height:10px;border-radius:6px;transition:width 0.8s ease;background:var(--green);}
+.pred-range{font-size:11px;color:var(--gray);display:flex;justify-content:space-between;}
+
+/* STAFFING */
+.staff-big{font-size:64px;font-family:'Montserrat',sans-serif;font-weight:800;line-height:1;margin:4px 0;}
+.staff-names{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.staff-chip{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#fff;}
+
+/* BADGES */
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.badge.festivo{background:#fee2e2;color:#b91c1c;}
+.badge.piscina{background:#dbeafe;color:#1d4ed8;}
+.badge.weekend{background:#f3e8ff;color:#7c3aed;}
+.badge.feria{background:#fef9c3;color:#854d0e;}
+.badge.normal{background:#f0faf7;color:var(--green);}
+
+/* ROTA */
+.rota-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f5f5f5;}
+.rota-row:last-child{border-bottom:none;}
+.rota-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.rota-name{font-size:13px;font-weight:700;flex:1;}
+.rota-time{font-size:12px;color:var(--gray);}
+.rota-hours{font-size:11px;font-weight:600;color:var(--green);background:var(--green-l);padding:2px 8px;border-radius:8px;}
+
+/* STOCK */
+.stock-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5f5f5;}
+.stock-row:last-child{border-bottom:none;}
+.stock-name{font-size:13px;font-weight:600;flex:1;}
+.stock-level{font-size:12px;font-weight:700;padding:2px 10px;border-radius:10px;}
+.stock-level.ok{background:#dcfce7;color:#166534;}
+.stock-level.low{background:#fef9c3;color:#854d0e;}
+.stock-level.critical{background:#fee2e2;color:#b91c1c;}
+
+/* CHECKLIST STATUS */
+.cl-status{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;}
+.cl-status.done{background:#f0faf7;border:1.5px solid #a7f3d0;}
+.cl-status.pending{background:#fffbeb;border:1.5px solid #fde68a;}
+.cl-status-icon{font-size:28px;}
+.cl-status-text{font-size:13px;font-weight:600;}
+.cl-status-sub{font-size:11px;color:var(--gray);margin-top:2px;}
+
+/* HISTORY COMPARISON */
+.hist-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;}
+.hist-row:last-child{border-bottom:none;}
+.hist-label{font-size:13px;color:var(--gray);}
+.hist-val{font-size:14px;font-weight:700;}
+.hist-delta{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px;}
+.hist-delta.pos{background:#dcfce7;color:#166534;}
+.hist-delta.neg{background:#fee2e2;color:#b91c1c;}
+
+.loading{color:var(--gray);font-size:13px;opacity:0.7;font-style:italic;}
+.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gray);margin:20px 0 12px;}
+
+@media(max-width:600px){
+  .grid-3{grid-template-columns:1fr;}
+  .grid-2{grid-template-columns:1fr;}
+  .brief-date{font-size:22px;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="brief-header">
+  <div class="brief-date" id="hdrDate">—</div>
+  <div class="brief-sub">
+    <span id="hdrGreeting">Buenos días</span>
+    <span class="brief-clock" id="hdrClock">—</span>
+  </div>
+  <div class="brief-nav">
+    <a class="brief-nav-btn" href="index.html">← POS</a>
+    <a class="brief-nav-btn" href="verdi-rota.html">👥 Rota</a>
+    <a class="brief-nav-btn" href="verdi-predictor.html">📊 Predictor</a>
+    <a class="brief-nav-btn" href="verdi-checklist.html">✅ Checklist</a>
+    <button class="brief-nav-btn" onclick="location.reload()">↺ Actualizar</button>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ROW 1: Weather + Prediction + Staffing -->
+  <div class="grid-3">
+
+    <!-- Weather -->
+    <div class="card" id="weatherCard">
+      <div class="card-label">🌤️ Tiempo — Boadilla del Monte</div>
+      <div class="loading">Cargando...</div>
+    </div>
+
+    <!-- Prediction -->
+    <div class="card" id="predCard">
+      <div class="card-label">📊 Previsión del Día</div>
+      <div class="loading">Calculando...</div>
+    </div>
+
+    <!-- Staffing -->
+    <div class="card" id="staffCard">
+      <div class="card-label">👥 Personal Recomendado</div>
+      <div class="loading">Calculando...</div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: Day context + Rota -->
+  <div class="grid-2">
+
+    <!-- Day Context -->
+    <div class="card" id="contextCard">
+      <div class="card-label">📅 Contexto del Día</div>
+      <div class="loading">Cargando...</div>
+    </div>
+
+    <!-- Today's Rota -->
+    <div class="card" id="rotaCard">
+      <div class="card-label">🗓️ Turno de Hoy</div>
+      <div class="loading">Cargando Firebase...</div>
+    </div>
+
+  </div>
+
+  <!-- ROW 3: Stock + Checklist + Yesterday -->
+  <div class="grid-3">
+
+    <!-- Stock Alerts -->
+    <div class="card" id="stockCard">
+      <div class="card-label">📦 Alertas de Stock</div>
+      <div class="loading">Cargando...</div>
+    </div>
+
+    <!-- Checklist Status -->
+    <div class="card" id="clCard">
+      <div class="card-label">✅ Apertura de Hoy</div>
+      <div class="loading">Verificando...</div>
+    </div>
+
+    <!-- Historical Context -->
+    <div class="card" id="histCard">
+      <div class="card-label">📈 Contexto Histórico</div>
+      <div class="loading">Cargando...</div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+var DB = 'https://verdi-boadilla---pos-default-rtdb.europe-west1.firebasedatabase.app';
+var LAT = 40.4054, LNG = -3.8789;
+
+var EMP_COLORS = {Charles:'#1a1a1a',Rocío:'#006E51',Valentina:'#e91e8c',Gabriella:'#f5b800',Susana:'#7c3aed'};
+var DOW_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+var DOW_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+var MON_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+// ── FESTIVOS 2025 + 2026 (National + Madrid + Boadilla) ───────────────
+var FESTIVOS = {
+  // 2025
+  '2025-01-01':true,'2025-01-06':true,'2025-04-17':true,'2025-04-18':true,
+  '2025-05-01':true,'2025-05-02':true,'2025-05-15':true,'2025-07-25':true,
+  '2025-08-15':true,'2025-10-12':true,'2025-11-01':true,'2025-11-09':true,
+  '2025-12-06':true,'2025-12-08':true,'2025-12-25':true,
+  // 2026
+  '2026-01-01':true,'2026-01-06':true,'2026-04-02':true,'2026-04-03':true,
+  '2026-05-01':true,'2026-05-02':true,'2026-05-15':true,'2026-07-25':true,
+  '2026-08-15':true,'2026-10-12':true,'2026-11-01':true,'2026-11-09':true,
+  '2026-12-06':true,'2026-12-08':true,'2026-12-25':true
+};
+
+var FESTIVO_NAMES = {
+  '2026-01-01':'Año Nuevo','2026-01-06':'Reyes Magos',
+  '2026-04-02':'Jueves Santo','2026-04-03':'Viernes Santo',
+  '2026-05-01':'Día del Trabajo','2026-05-02':'Comunidad de Madrid',
+  '2026-05-15':'San Isidro','2026-07-25':'Santiago Apóstol',
+  '2026-08-15':'Asunción','2026-10-12':'Fiesta Nacional',
+  '2026-11-01':'Todos los Santos','2026-11-09':'La Almudena',
+  '2026-12-06':'Día de la Constitución','2026-12-08':'Inmaculada',
+  '2026-12-25':'Navidad'
+};
+
+// ── DATE HELPERS ──────────────────────────────────────────────────────
+var NOW = new Date();
+var TODAY_STR = NOW.toISOString().slice(0,10);
+var TODAY_KEY = TODAY_STR.replace(/-/g,'_');
+var DOW = NOW.getDay(); // 0=Sun
+var MONTH = NOW.getMonth() + 1;
+var DAY = NOW.getDate();
+
+function isFestivo(dateStr) { return !!FESTIVOS[dateStr]; }
+function isPiscina() { // Jun 14 – Sep 14
+  var m = MONTH, d = DAY;
+  return (m===6&&d>=14)||(m===7)||(m===8)||(m===9&&d<=14);
+}
+function isFiestaPatronal() { // Jul 21-27
+  return MONTH===7 && DAY>=21 && DAY<=27;
+}
+function isWeekend() { return DOW===0||DOW===6; }
+function isFriSat() { return DOW===5||DOW===6; }
+
+// ── CLOCK & HEADER ────────────────────────────────────────────────────
+function updateClock() {
+  var n = new Date();
+  document.getElementById('hdrClock').textContent = n.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  var h = n.getHours();
+  var greeting = h<13?'Buenos días':h<20?'Buenas tardes':'Buenas noches';
+  document.getElementById('hdrGreeting').textContent = greeting;
+}
+document.getElementById('hdrDate').textContent = DOW_ES[DOW]+', '+DAY+' de '+MON_ES[NOW.getMonth()]+' '+NOW.getFullYear();
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── WMO WEATHER CODE → EMOJI ──────────────────────────────────────────
+function wmoEmoji(code) {
+  if(code===0) return '☀️';
+  if(code<=2) return '⛅';
+  if(code<=3) return '☁️';
+  if(code<=49) return '🌫️';
+  if(code<=59) return '🌦️';
+  if(code<=69) return '🌧️';
+  if(code<=79) return '🌨️';
+  if(code<=82) return '🌧️';
+  if(code<=84) return '⛈️';
+  if(code<=94) return '⛈️';
+  return '🌩️';
+}
+function wmoDesc(code) {
+  if(code===0) return 'Despejado';
+  if(code<=2) return 'Parcialmente nublado';
+  if(code<=3) return 'Nublado';
+  if(code<=45) return 'Niebla';
+  if(code<=59) return 'Llovizna';
+  if(code<=69) return 'Lluvia';
+  if(code<=79) return 'Nieve';
+  if(code<=82) return 'Lluvia intensa';
+  if(code<=84) return 'Granizo';
+  return 'Tormenta';
+}
+
+// ── PREDICTION ENGINE ─────────────────────────────────────────────────
+// Base daily revenue estimates by weekday (0=Sun)
+var BASE_REV = [620,320,340,360,410,680,820];
+
+function calcPrediction(hist) {
+  // 1. Collect same-weekday results from last 8 weeks
+  var sameDay = [];
+  Object.values(hist||{}).forEach(function(d) {
+    if(!d||!d.date||!d.totalRev) return;
+    var dd = new Date(d.date+'T12:00:00');
+    if(dd.getDay()===DOW) {
+      var weeksAgo = Math.round((NOW-dd)/(7*24*60*60*1000));
+      if(weeksAgo>=1&&weeksAgo<=8) sameDay.push(d.totalRev);
+    }
+  });
+
+  var base;
+  if(sameDay.length>=2) {
+    // Weighted average (more recent = more weight)
+    base = sameDay.reduce(function(s,v){return s+v;},0)/sameDay.length;
+  } else if(sameDay.length===1) {
+    base = sameDay[0]*0.7 + BASE_REV[DOW]*0.3;
+  } else {
+    base = BASE_REV[DOW];
+  }
+
+  // 2. Apply multipliers
+  var mult = 1.0;
+  var boosts = [];
+  if(isFestivo(TODAY_STR)) { mult *= 1.30; boosts.push('festivo'); }
+  if(isPiscina()) { mult *= 1.18; boosts.push('piscina'); }
+  if(isFiestaPatronal()) { mult *= 1.35; boosts.push('feria'); }
+
+  var pred = Math.round(base * mult / 10) * 10;
+  var lo = Math.round(pred*0.85/10)*10;
+  var hi = Math.round(pred*1.15/10)*10;
+
+  // 3. Historical confidence
+  var confidence = sameDay.length >= 4 ? 'alta' : sameDay.length >= 2 ? 'media' : 'estimada';
+  var dataPoints = sameDay.length;
+
+  return {pred:pred, lo:lo, hi:hi, confidence:confidence, boosts:boosts, dataPoints:dataPoints, base:base};
+}
+
+function getStaffing(pred, weather) {
+  var rainPenalty = (weather && weather.precip > 3) ? 0.85 : 1.0;
+  var adj = pred * rainPenalty;
+  var n;
+  if(adj>=1500 || (adj>=1200 && isFriSat() && (isPiscina()||isFestivo(TODAY_STR)))) n=3;
+  else if(adj>=750 || (adj>=600 && isFriSat())) n=2;
+  else n=1;
+  return n;
+}
+
+// ── RENDER FUNCTIONS ──────────────────────────────────────────────────
+function renderWeather(data) {
+  var c = data.current;
+  var temp = Math.round(c.temperature_2m);
+  var feels = Math.round(c.apparent_temperature);
+  var precip = c.precipitation;
+  var wind = Math.round(c.windspeed_10m);
+  var code = c.weathercode;
+  var humidity = Math.round(c.relative_humidity_2m||0);
+
+  // Rain probability from hourly (next 8h)
+  var hourlyProbs = (data.hourly&&data.hourly.precipitation_probability)||[];
+  var maxProb = hourlyProbs.slice(0,8).reduce(function(m,v){return Math.max(m,v||0);},0);
+
+  document.getElementById('weatherCard').innerHTML =
+    '<div class="card-label">🌤️ Tiempo — Boadilla del Monte</div>'+
+    '<div class="weather-main">'+
+      '<div class="weather-emoji">'+wmoEmoji(code)+'</div>'+
+      '<div><div class="weather-temp">'+temp+'°C</div><div class="weather-desc">'+wmoDesc(code)+'</div></div>'+
+    '</div>'+
+    '<div class="weather-pills">'+
+      '<span class="weather-pill">🌡️ Sensación '+feels+'°C</span>'+
+      '<span class="weather-pill">💧 '+humidity+'%</span>'+
+      '<span class="weather-pill">💨 '+wind+' km/h</span>'+
+      (maxProb>20?'<span class="weather-pill" style="background:#dbeafe;color:#1d4ed8;">🌧️ '+maxProb+'% lluvia</span>':'')+(precip>0?'<span class="weather-pill" style="background:#fee2e2;color:#b91c1c;">⚠️ '+precip+'mm ahora</span>':'')+
+    '</div>';
+
+  return {precip:precip, maxProb:maxProb, temp:temp};
+}
+
+function renderPrediction(result, actualRev) {
+  actualRev = actualRev || 0;
+  var target = result.pred;
+  var progressPct = target > 0 ? Math.min(100, Math.round(actualRev / target * 100)) : 0;
+  var remaining = Math.max(0, target - actualRev);
+
+  // Bar color: green if on track, amber if behind pace, blue if no sales yet
+  var now = new Date();
+  var hourOfDay = now.getHours() + now.getMinutes()/60;
+  var shopOpen = 15.5; // ~15:30 open
+  var shopClose = 23.0;
+  var dayElapsed = Math.max(0, Math.min(1, (hourOfDay - shopOpen) / (shopClose - shopOpen)));
+  var expectedByNow = target * dayElapsed;
+  var barColor = actualRev === 0 ? '#3b82f6'
+    : actualRev >= expectedByNow ? '#22c55e'
+    : '#f59e0b';
+
+  var confColor = result.confidence==='alta'?'#166534':result.confidence==='media'?'#854d0e':'#6b7f78';
+  var boostText = result.boosts.length ? ' · '+result.boosts.join(', ') : '';
+
+  var actualLine = actualRev > 0
+    ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
+        '<span style="font-size:22px;font-weight:800;font-family:Montserrat,sans-serif;color:'+barColor+';">€'+actualRev.toFixed(2)+'</span>'+
+        '<span style="font-size:13px;color:var(--gray);">de €'+target+' previstos</span>'+
+      '</div>'
+    : '<div style="font-size:13px;color:var(--gray);margin-bottom:6px;">Objetivo: <strong>€'+target+'</strong></div>';
+
+  var remainLine = actualRev > 0 && remaining > 0
+    ? '<div style="font-size:11px;color:var(--gray);margin-top:4px;">Faltan €'+remaining.toFixed(0)+' · '+progressPct+'% completado</div>'
+    : actualRev >= target && actualRev > 0
+    ? '<div style="font-size:11px;color:#166534;font-weight:700;margin-top:4px;">🎯 ¡Objetivo superado! +€'+(actualRev-target).toFixed(0)+'</div>'
+    : '<div style="font-size:11px;color:var(--gray);margin-top:4px;">Sin ventas registradas aún</div>';
+
+  document.getElementById('predCard').innerHTML =
+    '<div class="card-label">📊 Previsión del Día</div>'+
+    actualLine+
+    '<div class="pred-bar-wrap"><div class="pred-bar" style="width:'+progressPct+'%;background:'+barColor+';"></div></div>'+
+    remainLine+
+    '<div class="card-sub" style="margin-top:10px;padding-top:8px;border-top:1px solid #f5f5f5;">'+
+      '<span style="color:'+confColor+';font-weight:700;">Confianza '+result.confidence+'</span>'+
+      ' · '+result.dataPoints+(result.dataPoints===1?' semana':' semanas')+' de datos'+boostText+
+    '</div>';
+}
+
+function renderStaffing(n, schedToday) {
+  // Get who's actually scheduled today
+  var empColors = EMP_COLORS;
+  var chipsHtml = '';
+  if(schedToday && schedToday.length>0) {
+    var unique = {};
+    schedToday.forEach(function(s){unique[s.employee]=true;});
+    Object.keys(unique).forEach(function(emp){
+      chipsHtml += '<span class="staff-chip" style="background:'+(empColors[emp]||'#888')+';">'+emp+'</span>';
+    });
+  }
+
+  var staffColor = n===1?'#3b82f6':n===2?'#f59e0b':'#22c55e';
+  var staffMsg = n===1?'Jornada tranquila':n===2?'Ritmo moderado':'Día intenso — equipo completo';
+
+  document.getElementById('staffCard').innerHTML =
+    '<div class="card-label">👥 Personal Recomendado</div>'+
+    '<div class="staff-big" style="color:'+staffColor+';">'+n+'</div>'+
+    '<div class="card-sub">'+staffMsg+'</div>'+
+    (chipsHtml?'<div class="staff-names">'+chipsHtml+'</div>':'<div class="card-sub" style="margin-top:8px;font-style:italic;">Sin turno asignado hoy</div>');
+}
+
+function renderContext() {
+  var badges = '';
+  if(isFestivo(TODAY_STR)) badges += '<span class="badge festivo">🎉 '+( FESTIVO_NAMES[TODAY_STR]||'Festivo')+'</span>';
+  if(isFiestaPatronal()) badges += '<span class="badge feria">🎡 Fiestas Patronales</span>';
+  if(isPiscina()) badges += '<span class="badge piscina">🏊 Piscina Municipal Abierta</span>';
+  if(isWeekend()) badges += '<span class="badge weekend">📅 Fin de semana</span>';
+  if(!badges) badges = '<span class="badge normal">📅 Día normal</span>';
+
+  // Day number in week + weeks to summer
+  var daysToJun14 = Math.ceil((new Date('2026-06-14')-NOW)/(24*60*60*1000));
+  var contextLine = daysToJun14>0&&daysToJun14<90 ? '<div class="card-sub" style="margin-top:10px;">🏊 Piscina abre en <strong>'+daysToJun14+' días</strong></div>' : '';
+
+  // Tomorrow preview
+  var tom = new Date(NOW); tom.setDate(tom.getDate()+1);
+  var tomKey = tom.toISOString().slice(0,10);
+  var tomFestivo = isFestivo(tomKey) ? ' · 🎉 '+(FESTIVO_NAMES[tomKey]||'Festivo') : '';
+  var tomStr = 'Mañana: '+DOW_ES[tom.getDay()]+tomFestivo;
+
+  document.getElementById('contextCard').innerHTML =
+    '<div class="card-label">📅 Contexto del Día</div>'+
+    '<div class="badge-row">'+badges+'</div>'+
+    contextLine+
+    '<div class="card-sub" style="margin-top:8px;padding-top:8px;border-top:1px solid #f5f5f5;">'+tomStr+'</div>';
+}
+
+function renderRota(shifts) {
+  if(!shifts||shifts.length===0) {
+    document.getElementById('rotaCard').innerHTML =
+      '<div class="card-label">🗓️ Turno de Hoy</div>'+
+      '<div class="card-sub" style="font-style:italic;padding:8px 0;">Sin turnos asignados para hoy.<br><a href="verdi-rota.html" style="color:var(--green);font-weight:600;">→ Abrir Rota</a></div>';
+    return;
+  }
+
+  // Sort by start time
+  shifts.sort(function(a,b){return a.start.localeCompare(b.start);});
+  var rows = shifts.map(function(s){
+    var sMin = parseInt(s.start.split(':')[0])*60+parseInt(s.start.split(':')[1]);
+    var eMin = parseInt(s.end.split(':')[0])*60+parseInt(s.end.split(':')[1]);
+    if(eMin<sMin) eMin+=24*60;
+    var hrs = ((eMin-sMin)/60).toFixed(1);
+    return '<div class="rota-row">'+
+      '<div class="rota-dot" style="background:'+(EMP_COLORS[s.employee]||'#888')+'"></div>'+
+      '<div class="rota-name">'+s.employee+'</div>'+
+      '<div class="rota-time">'+s.start+'–'+s.end+'</div>'+
+      '<div class="rota-hours">'+hrs+'h</div>'+
+    '</div>';
+  }).join('');
+
+  document.getElementById('rotaCard').innerHTML =
+    '<div class="card-label">🗓️ Turno de Hoy · <a href="verdi-rota.html" style="color:var(--green);">ver rota</a></div>'+rows;
+}
+
+// ── EXACT same formula as verdi-inventory.html ───────────────────────
+var LEVEL_ORDER = {'empty':0,'quarter':1,'half':2,'three-quarters':3,'full':4};
+
+function getStockStatus(f) {
+  var ideal = f.idealFreezer || 1;
+  if ((f.freezer||0) === 0) return 'order';  // freezer empty → critical
+  var vitrineBonus = (LEVEL_ORDER[f.caseLevel] || 0) >= LEVEL_ORDER['three-quarters'] ? 1 : 0;
+  var effectiveStock = (f.freezer||0) + vitrineBonus;
+  if (effectiveStock >= ideal) return 'ok';
+  return 'low';
+}
+
+function renderStock(inventory) {
+  if(!inventory||!inventory.flavors||inventory.flavors.length===0) {
+    document.getElementById('stockCard').innerHTML =
+      '<div class="card-label">📦 Alertas de Stock</div>'+
+      '<div class="card-sub" style="font-style:italic;padding:8px 0;">Sin datos de inventario.<br><a href="verdi-inventory.html" style="color:var(--green);font-weight:600;">→ Abrir Inventario</a></div>';
+    return;
+  }
+
+  var alerts = inventory.flavors.filter(function(f){
+    return getStockStatus(f) !== 'ok';
+  });
+
+  if(alerts.length===0) {
+    document.getElementById('stockCard').innerHTML =
+      '<div class="card-label">📦 Stock</div>'+
+      '<div class="cl-status done" style="margin-top:8px;">'+
+        '<div class="cl-status-icon">✅</div>'+
+        '<div><div class="cl-status-text">Todo en orden</div>'+
+        '<div class="cl-status-sub">'+inventory.flavors.length+' sabores revisados</div></div>'+
+      '</div>';
+    return;
+  }
+
+  var rows = alerts.slice(0,6).map(function(f){
+    var status = getStockStatus(f);
+    var freezer = f.freezer||0, ideal = f.idealFreezer||1;
+    var vitrineBonus = (LEVEL_ORDER[f.caseLevel]||0) >= LEVEL_ORDER['three-quarters'] ? 1 : 0;
+    var effective = freezer + vitrineBonus;
+    var isCrit = status==='order';
+    var label = isCrit ? '⚠️ Agotado' : '↓ '+effective+'/'+ideal;
+    return '<div class="stock-row">'+
+      '<div class="stock-name">'+f.name+'</div>'+
+      '<div class="stock-level '+(isCrit?'critical':'low')+'">'+label+'</div>'+
+    '</div>';
+  }).join('');
+
+  var more = alerts.length>6 ? '<div class="card-sub" style="margin-top:8px;">+'+(alerts.length-6)+' más — <a href="verdi-inventory.html" style="color:var(--green);">ver inventario</a></div>' : '';
+
+  document.getElementById('stockCard').innerHTML =
+    '<div class="card-label">📦 '+(alerts.length)+' Alerta'+(alerts.length>1?'s':'')+' de Stock</div>'+
+    rows+more;
+}
+
+function renderChecklist(record) {
+  var done = false;
+  var emp='', time='';
+  if(record && record.completedAt) {
+    done=true; emp=record.employee||'';
+    time=new Date(record.completedAt).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  }
+  document.getElementById('clCard').innerHTML =
+    '<div class="card-label">✅ Apertura de Hoy</div>'+
+    '<div class="cl-status '+(done?'done':'pending')+'" style="margin-top:8px;">'+
+      '<div class="cl-status-icon">'+(done?'✅':'⏳')+'</div>'+
+      '<div>'+
+        '<div class="cl-status-text">'+(done?'Completada':'Pendiente')+'</div>'+
+        '<div class="cl-status-sub">'+(done?emp+' · '+time:'<a href="verdi-checklist.html" style="color:var(--green);font-weight:600;">→ Abrir Checklist</a>')+'</div>'+
+      '</div>'+
+    '</div>';
+}
+
+function renderHistory(hist) {
+  var todayKey = TODAY_KEY;
+  // Yesterday
+  var yest = new Date(NOW); yest.setDate(yest.getDate()-1);
+  var yestKey = yest.toISOString().slice(0,10).replace(/-/g,'_');
+
+  // Same weekday last 4 weeks
+  var sameDay = [];
+  Object.entries(hist||{}).forEach(function(e){
+    var key=e[0], d=e[1];
+    if(!d||!d.totalRev||!d.date) return;
+    var dd = new Date(d.date+'T12:00:00');
+    if(dd.getDay()===DOW&&key!==todayKey) {
+      var ago = Math.round((NOW-dd)/(7*24*60*60*1000));
+      if(ago>=1&&ago<=4) sameDay.push(d.totalRev);
+    }
+  });
+
+  var yestData = hist[yestKey];
+  var avgSameDay = sameDay.length>0 ? sameDay.reduce(function(s,v){return s+v;},0)/sameDay.length : 0;
+
+  var rows = '';
+  if(yestData&&yestData.totalRev) {
+    rows += '<div class="hist-row"><span class="hist-label">Ayer ('+DOW_ES[yest.getDay()]+')</span><span class="hist-val">€'+yestData.totalRev.toFixed(0)+'</span></div>';
+  }
+  if(avgSameDay>0) {
+    rows += '<div class="hist-row"><span class="hist-label">Media '+DOW_SHORT[DOW]+' (×'+sameDay.length+')</span><span class="hist-val">€'+Math.round(avgSameDay)+'</span></div>';
+  }
+  if(yestData&&avgSameDay>0) {
+    var delta = yestData.totalRev - avgSameDay;
+    var pct = Math.round(Math.abs(delta)/avgSameDay*100);
+    rows += '<div class="hist-row"><span class="hist-label">Vs. media</span><span><span class="hist-delta '+(delta>=0?'pos':'neg')+'">'+(delta>=0?'+':'')+pct+'%</span></span></div>';
+  }
+  if(!rows) rows = '<div class="card-sub" style="padding:8px 0;font-style:italic;">Sin datos históricos todavía.</div>';
+
+  document.getElementById('histCard').innerHTML = '<div class="card-label">📈 Contexto Histórico</div>'+rows;
+}
+
+// ── MAIN LOADER ───────────────────────────────────────────────────────
+function fmt(n){return n<10?'0'+n:String(n);}
+
+Promise.all([
+  // Weather
+  fetch('https://api.open-meteo.com/v1/forecast?latitude='+LAT+'&longitude='+LNG+'&current=temperature_2m,apparent_temperature,precipitation,weathercode,windspeed_10m,relative_humidity_2m&hourly=precipitation_probability&timezone=Europe%2FMadrid&forecast_days=1').then(function(r){return r.json();}).catch(function(){return null;}),
+  // Firebase: history
+  fetch(DB+'/pos/history.json').then(function(r){return r.json();}).catch(function(){return {};}),
+  // Firebase: today's rota
+  fetch(DB+'/pos/rota/'+TODAY_STR+'.json').then(function(r){return r.json();}).catch(function(){return null;}),
+  // Firebase: inventory
+  fetch(DB+'/pos/inventory.json').then(function(r){return r.json();}).catch(function(){return null;}),
+  // Firebase: apertura checklist (last 5)
+  fetch(DB+'/pos/checklists/apertura/'+TODAY_STR+'.json').then(function(r){return r.json();}).catch(function(){return null;}),
+  // Firebase: today's live sales session
+  fetch(DB+'/pos/sessions/'+TODAY_KEY+'/sales.json').then(function(r){return r.json();}).catch(function(){return null;})
+]).then(function(results){
+  var weather=results[0], hist=results[1]||{}, rota=results[2], inventory=results[3], clLog=results[4], sessionSales=results[5];
+
+  // Compute actual revenue from today's session
+  var actualRev = 0;
+  if(sessionSales) {
+    Object.values(sessionSales).forEach(function(tx){
+      if(tx && !tx.voided && tx.total) actualRev += tx.total;
+    });
+  }
+
+  // Prediction
+  var pred = calcPrediction(hist);
+
+  // Weather
+  var wx = null;
+  if(weather&&weather.current) {
+    wx = renderWeather(weather);
+  } else {
+    document.getElementById('weatherCard').innerHTML='<div class="card-label">🌤️ Tiempo</div><div class="card-sub">Sin datos meteorológicos</div>';
+  }
+
+  // Prediction
+  renderPrediction(pred, actualRev);
+
+  // Staffing
+  var n = getStaffing(pred.pred, wx);
+  var todayShifts = Array.isArray(rota)?rota:(rota?Object.values(rota).filter(Boolean):[]);
+  renderStaffing(n, todayShifts);
+
+  // Context
+  renderContext();
+
+  // Rota
+  renderRota(todayShifts);
+
+  // Stock
+  renderStock(inventory);
+
+  // Checklist
+  renderChecklist(clLog);
+
+  // History
+  renderHistory(hist);
+});
+</script>
+</body>
+</html>
